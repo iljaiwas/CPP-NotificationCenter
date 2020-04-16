@@ -30,24 +30,37 @@
 class Foo {
     
 public:
-    void func()
+    typedef NotificationCenter::notification_user_info_t userInfo_t;
+
+    void func(userInfo_t userInfo)
     {
         printf("Hello std::bind!\n");
+        printf("Recieved notification %s!\n", userInfo["key"]);
     }
 };
 
 void runNotification()
 {
-    auto i1 = NotificationCenter::defaultNotificationCenter()->addObserver([=]{printf("Recieved notification %d!\n", 1);}, "Poster");
-    auto i2 = NotificationCenter::defaultNotificationCenter()->addObserver([=]{printf("Recieved notification %d!\n", 2);}, "Poster");
-    auto i3 = NotificationCenter::defaultNotificationCenter()->addObserver([=]{printf("Recieved notification %d!\n", 3);}, "Poster");
-    auto i4 = NotificationCenter::defaultNotificationCenter()->addObserver([=]{printf("Recieved notification %d!\n", 4);}, "Poster");
-    auto i5 = NotificationCenter::defaultNotificationCenter()->addObserver([=]{printf("Recieved notification %d!\n", 5);}, "Poster");
-    NotificationCenter::defaultNotificationCenter()->addObserver([=]{printf("Recieved notification %d!\n", 6);}, "Poster");
-    NotificationCenter::defaultNotificationCenter()->addObserver([=]{printf("Recieved notification %d!\n", 7);}, "Poster");
-    NotificationCenter::defaultNotificationCenter()->addObserver([=]{printf("Recieved notification %d!\n", 8);}, "Poster");
-    
-    NotificationCenter::defaultNotificationCenter()->postNotification("Poster");
+    typedef NotificationCenter::notification_user_info_t userInfo_t;
+
+    auto i1 = NotificationCenter::defaultNotificationCenter()->addObserver([](userInfo_t userInfo){
+        printf("Recieved notification %s!\n", userInfo["key"]);},
+        "Poster");
+
+
+    auto i2 = NotificationCenter::defaultNotificationCenter()->addObserver([](const userInfo_t& userInfo){printf("Recieved notification %d!\n", 2);}, "Poster");
+    auto i3 = NotificationCenter::defaultNotificationCenter()->addObserver([](const userInfo_t& userInfo){printf("Recieved notification %d!\n", 3);}, "Poster");
+    auto i4 = NotificationCenter::defaultNotificationCenter()->addObserver([](const userInfo_t& userInfo){printf("Recieved notification %d!\n", 4);}, "Poster");
+    auto i5 = NotificationCenter::defaultNotificationCenter()->addObserver([](const userInfo_t& userInfo){printf("Recieved notification %d!\n", 5);}, "Poster");
+    NotificationCenter::defaultNotificationCenter()->addObserver([](const userInfo_t& userInfo){printf("Recieved notification %d!\n", 6);}, "Poster");
+    NotificationCenter::defaultNotificationCenter()->addObserver([](const userInfo_t& userInfo){printf("Recieved notification %d!\n", 7);}, "Poster");
+    NotificationCenter::defaultNotificationCenter()->addObserver([](const userInfo_t& userInfo){printf("Recieved notification %d!\n", 8);}, "Poster");
+
+    userInfo_t userInfo;
+    const char* value = "value 1";
+
+    userInfo["key"] = (void*) value;
+    NotificationCenter::defaultNotificationCenter()->postNotification("Poster", userInfo);
     
     printf("============\n");
     
@@ -87,15 +100,15 @@ void runNotification()
     
     printf("============\n");
     
-    NotificationCenter::defaultNotificationCenter()->addObserver([=]{printf("Called by iterator!\n");}, "Second Poster");
+    NotificationCenter::defaultNotificationCenter()->addObserver([](const userInfo_t& userInfo){printf("Called by iterator!\n");}, "Second Poster");
     NotificationCenter::notification_const_itr_t itr = NotificationCenter::defaultNotificationCenter()->getNotificationIterator("Second Poster");
     NotificationCenter::defaultNotificationCenter()->postNotification(itr);
     printf("============\n");
     
     Foo myFoo;
     
-    NotificationCenter::defaultNotificationCenter()->addObserver(std::bind(&Foo::func, myFoo), "Second Poster");
-    NotificationCenter::defaultNotificationCenter()->postNotification("Second Poster");
+    NotificationCenter::defaultNotificationCenter()->addObserver(std::bind(&Foo::func, myFoo, std::placeholders::_1 ), "Second Poster");
+    NotificationCenter::defaultNotificationCenter()->postNotification("Second Poster", userInfo);
     
 }
 

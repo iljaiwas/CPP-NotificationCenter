@@ -37,7 +37,7 @@
 #include <mutex>
 
 struct NotificationObserver {
-    std::function<void(void)> callback;
+    std::function<void(std::map<std::string, void*>)> callback;
 };
 
 class NotificationCenter {
@@ -50,20 +50,22 @@ public:
     typedef std::map<std::string, std::list<NotificationObserver> >::iterator notification_itr_t;
     typedef std::list<NotificationObserver>::const_iterator observer_const_itr_t;
     typedef std::list<NotificationObserver>::iterator observer_itr_t;
+    typedef std::map<std::string, void*> notification_user_info_t;
+
     
     /**
      * This method adds a function callback as an observer to a named notification.
      * @param method the function callback.  Accepts void(void) methods or lambdas.
      * @param name the name of the notification you wish to observe.
      */
-    observer_const_itr_t addObserver(std::function<void(void)> method, const std::string& name);
+    observer_const_itr_t addObserver(std::function<void(const notification_user_info_t&)> method, const std::string& name);
     
     /**
      * This method adds a function callback as an observer to a given notification.
      * @param method the function callback.  Accepts void(void) methods or lambdas.
-     * @param name the name of the notification you wish to observe.
+     * @param notification ??
      */
-    observer_const_itr_t addObserver(std::function<void(void)> method, notification_itr_t& notification);
+    observer_const_itr_t addObserver(std::function<void(const notification_user_info_t&)> method, notification_itr_t& notification);
     
     /**
      * This method removes an observer by iterator.
@@ -94,21 +96,21 @@ public:
     /**
      * This method posts a notification to a set of observers.
      * If successful, this function calls all callbacks associated with that notification and return true.  If no such notification exists, this function will print a warning to the console and return false.
-     * @param name the name of the notification you wish to post.
+     * @param notification the name of the notification you wish to post.
      */
-    bool postNotification(const std::string& notification) const;
+    bool postNotification(const std::string& notification, const notification_user_info_t& userInfo=notification_user_info_t()) const;
     
     /**
      * This method posts a notification to a set of observers.
      * If successful, this function calls all callbacks associated with that notification and return true.  If no such notification exists, this function will print a warning to the console and return false.
-     * @param name the name of the notification you wish to post.
+     * @param notification the name of the notification you wish to post.
      */
-    bool postNotification(notification_const_itr_t& notification) const;
-    
+    bool postNotification(notification_const_itr_t& notification, const notification_user_info_t& userInfo=notification_user_info_t()) const;
+
     /**
      * This method retrieves a notification iterator for a named notification.
      * The returned iterator may be used with the overloaded variants of postNotification, removeAllObservers, removeObserver, and addObserver to avoid string lookups.
-     * @param name the name of the notification you wish to post.
+     * @param notification the name of the notification you wish to post.
      */
     notification_itr_t getNotificationIterator(const std::string& notification);
     

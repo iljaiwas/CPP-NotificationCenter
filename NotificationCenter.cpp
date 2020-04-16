@@ -27,7 +27,7 @@
 
 std::shared_ptr<NotificationCenter> NotificationCenter::_defaultCenter = nullptr;
 
-NotificationCenter::observer_const_itr_t NotificationCenter::addObserver(std::function<void()> method, const std::string& name)
+NotificationCenter::observer_const_itr_t NotificationCenter::addObserver(std::function<void(const NotificationCenter::notification_user_info_t&)> method, const std::string& name)
 {
     std::lock_guard<std::mutex> lock(_mutex);
     NotificationObserver n;
@@ -36,7 +36,7 @@ NotificationCenter::observer_const_itr_t NotificationCenter::addObserver(std::fu
     return --_observers[name].end();
 }
 
-NotificationCenter::observer_const_itr_t NotificationCenter::addObserver(std::function<void (void)> method, notification_itr_t &notification)
+NotificationCenter::observer_const_itr_t NotificationCenter::addObserver(std::function<void(const NotificationCenter::notification_user_info_t&)> method, notification_itr_t &notification)
 {
     std::lock_guard<std::mutex> lock(_mutex);
     NotificationCenter::observer_const_itr_t retVal = notification->second.end();
@@ -84,7 +84,7 @@ void NotificationCenter::removeAllObservers(notification_itr_t& notification)
     }
 }
 
-bool NotificationCenter::postNotification(const std::string& notification) const
+bool NotificationCenter::postNotification(const std::string& notification, const NotificationCenter::notification_user_info_t& userInfo) const
 {
     std::lock_guard<std::mutex> lock(_mutex);
     notification_const_itr_t i = _observers.find(notification);
@@ -93,7 +93,7 @@ bool NotificationCenter::postNotification(const std::string& notification) const
         const std::list<NotificationObserver>& notiList = i->second;
         for (observer_const_itr_t ia = notiList.begin(); ia != notiList.end(); ia++)
         {
-            ia->callback();
+            ia->callback(userInfo);
         }
         return true;
     }
@@ -104,7 +104,7 @@ bool NotificationCenter::postNotification(const std::string& notification) const
     }
 }
 
-bool NotificationCenter::postNotification(NotificationCenter::notification_const_itr_t& notification) const
+bool NotificationCenter::postNotification(NotificationCenter::notification_const_itr_t& notification, const NotificationCenter::notification_user_info_t&  userInfo) const
 {
     std::lock_guard<std::mutex> lock(_mutex);
     if (notification != _observers.end())
@@ -112,7 +112,7 @@ bool NotificationCenter::postNotification(NotificationCenter::notification_const
         const std::list<NotificationObserver>& notiList = notification->second;
         for (observer_const_itr_t i = notiList.begin(); i != notiList.end(); i++)
         {
-            i->callback();
+            i->callback(userInfo);
         }
         return true;
     }
